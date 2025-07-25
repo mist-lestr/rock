@@ -1,0 +1,53 @@
+apiVersion: mist-lestr.io/v1alpha1
+kind: Service
+metadata:
+  name: pod
+spec:
+  group: ""
+  version: v1
+  kind: Pod
+
+  domain: test
+  service: pod
+  gateway_ref:
+    name: truc
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: xxx
+  labels:
+    mist-lestr.io/project: b5bdc93f-b895-43cc-b6be-bdd2cd4f10dd 
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: xxx-admin
+  namespace: xxx
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: xxx
+  name: admin
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: xxx-admin
+  namespace: xxx
+subjects:
+  - kind: ServiceAccount
+    name: xxx-admin
+    namespace: xxx
+roleRef:
+  kind: Role
+  name: admin
