@@ -1,16 +1,18 @@
 use std::{collections::BTreeMap, sync::{Arc, Mutex}};
 
 use kube::Client;
-use rock_types::v1alpha1::ServiceSpec;
+use rock_types::v1alpha1::{PluginSpec, ServiceSpec};
 
 use crate::{api, controller};
 
+pub(crate) type Plugins = Arc<Mutex<BTreeMap<String, PluginSpec>>>;
 pub(crate) type Services = Arc<Mutex<BTreeMap<String, ServiceSpec>>>;
 
 pub(crate) async fn run(addr: String, port: i32) -> anyhow::Result<()> {
 
     let client = Client::try_default().await?;
     let services = Services::new(Mutex::new(BTreeMap::new()));
+    let plugins = Plugins::new(Mutex::new(BTreeMap::new()));
 
     {
         let client = client.clone();
@@ -21,7 +23,16 @@ pub(crate) async fn run(addr: String, port: i32) -> anyhow::Result<()> {
         });
     }
 
-    api::serve(addr, port, client, services).await?;
+    {
+        let client = client.clone();
+        let plugins = plugins.clone();
+
+        tokio::spawn(async move {
+            controller::plugin_controller::start(client, plugins).await;
+        });
+    }
+
+    api::serve(addr, port, client, services, plugins).await?;
 
     Ok(())
 }

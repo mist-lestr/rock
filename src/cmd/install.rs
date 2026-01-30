@@ -8,12 +8,11 @@ pub(crate) async fn install(all: bool, crd: bool) -> anyhow::Result<()> {
 
     if all || crd {
 
-        let service_crd = rock_types::v1alpha1::Service::crd();
-
         let crds: Api<CustomResourceDefinition> = Api::all(client.clone());
 
         let pp = PatchParams::apply("rock-installer").force(); 
 
+        let service_crd = rock_types::v1alpha1::Service::crd();
         let patched = crds
             .patch(
                 &service_crd.metadata.name.clone().expect("CRD must have a name"),
@@ -27,6 +26,22 @@ pub(crate) async fn install(all: bool, crd: bool) -> anyhow::Result<()> {
             patched.name_any(),
             patched.resource_version()
         );
+
+        let plugin_crd = rock_types::v1alpha1::Plugin::crd();
+        let patched = crds
+            .patch(
+                &plugin_crd.metadata.name.clone().expect("CRD must have a name"),
+                &pp,
+                &Patch::Apply(&plugin_crd),
+            )
+            .await?;
+        
+        println!(
+            "CRD {} applied with current version = {:?}",
+            patched.name_any(),
+            patched.resource_version()
+        );
+
     }
 
     if all {

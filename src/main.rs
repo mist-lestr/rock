@@ -20,13 +20,13 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Install {
-        #[arg(long, conflicts_with = "crd", default_value = "true", default_value_if("crd", "false", "true"))]
+        #[arg(long, conflicts_with = "crd", default_value = "true", default_value_if("crd", "true", "false"))]
         all: bool,
         #[arg(long, conflicts_with = "all", default_value = "false")]
         crd: bool,
     },
     Manifests {
-        #[arg(long, conflicts_with = "crd", default_value = "true", default_value_if("crd", "false", "true"))]
+        #[arg(long, conflicts_with = "crd", default_value = "true", default_value_if("crd", "true", "false"))]
         all: bool,
         #[arg(long, conflicts_with = "all", default_value = "false")]
         crd: bool,

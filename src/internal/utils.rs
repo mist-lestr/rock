@@ -34,13 +34,12 @@ pub(crate) async fn resolve_namespace(client: &Client, project: Uuid) -> Result<
     Ok(namespace.name_any())
 }
 
-pub(crate) async fn discover_api(client: &Client, service: &ServiceSpec) -> Result<(ApiResource, ApiCapabilities)> {
-    let gvk = GroupVersionKind::gvk(&service.group, &service.version, &service.kind);
-    
+pub(crate) async fn discover_api(client: &Client, gvk: &GroupVersionKind) -> Result<(ApiResource, ApiCapabilities)> {    
+
     match kube::discovery::pinned_kind(client, &gvk).await {
         Ok((ar, caps)) => Ok((ar, caps)),
         Err(e) => {
-            error!("Error discovering group/version/kind {}/{}/{} : {e}", &service.group, &service.version, &service.kind);
+            error!("Error discovering group/version/kind {}/{}/{} : {e}", gvk.group, gvk.version, gvk.kind);
             return Err(Error::KubernetesError(e));
         }
     }
